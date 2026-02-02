@@ -1,0 +1,69 @@
+
+loki.source.file "local_logs" {
+  targets = [
+    {
+      __path__ = "/var/log/syslog",
+      job      = "local",
+    },
+  ]
+
+  forward_to = [loki.write.default.receiver]
+}
+
+
+loki.write "default" {
+  endpoint {
+    url = "http://loki:3100/loki/api/v1/push"
+  }
+}
+
+
+
+prometheus.scrape "node_exporter" {
+  job_name = "node_exporter"
+  scrape_interval = "15s"
+  scrape_timeout  = "10s"
+
+  targets = [
+    {
+      __address__ = "localhost:9100",
+    },
+  ]
+
+  forward_to = [prometheus.remote_write.prom.receiver]
+}
+
+prometheus.scrape "clickhouse" {
+  job_name     = "clickhouse"
+  scrape_interval = "15s"
+  scrape_timeout  = "10s"
+  metrics_path = "/metrics"
+    
+  targets = [
+    {
+      __address__ = localhost:9013",
+    },
+  ]
+
+  forward_to = [prometheus.remote_write.prom.receiver]
+}
+
+prometheus.scrape "cadvisor" {
+  job_name = "cadvisor"
+  scrape_interval = "15s"
+  scrape_timeout  = "10s"
+  targets = [
+    {
+      __address__ = "localhost:9015",
+    },
+  ]
+
+  forward_to = [prometheus.remote_write.prom.receiver]
+}
+
+prometheus.remote_write "prom" {
+  endpoint {
+    url = "http://prometheus:9090/api/v1/write"
+  }
+}
+
